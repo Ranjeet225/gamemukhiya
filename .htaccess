@@ -1,0 +1,44 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^public/
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # Redirect to public folder if someone tries to access the project root directly
+    RewriteRule ^$ /public/ [L]
+    RewriteRule ^index.php$ /public/index.php [L]
+</IfModule>
+
+# Set proper permissions for security
+<FilesMatch "\.(env|json|yml|yml\.dist|md|git|gitignore|env\.example)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Disable directory browsing
+Options -Indexes
+
+# Enable GZIP compression for better performance
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/x-javascript application/javascript application/json application/xml+rss
+</IfModule>
+
+# Handle 404 errors
+ErrorDocument 404 /public/index.php
+
+# Add headers for security
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# PHP configuration
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_value max_execution_time 300
+    php_value memory_limit 512M
+    php_value post_max_size 64M
+    php_value upload_max_filesize 64M
+    php_value max_input_vars 1000
+</IfModule>

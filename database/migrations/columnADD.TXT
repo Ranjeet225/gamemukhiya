@@ -1,0 +1,3 @@
+ALTER TABLE `withdrawals` ADD `payment_method` VARCHAR(2555) NULL AFTER `currency`, ADD `account_holder_name` VARCHAR(2555) NULL AFTER `payment_method`, ADD `account_number` VARCHAR(2555) NULL AFTER `account_holder_name`, ADD `ifsc_code` VARCHAR(2555) NULL AFTER `account_number`;
+ALTER TABLE `withdrawals` ADD `upi_id` VARCHAR(2555) NULL DEFAULT NULL AFTER `ifsc_code`;
+
