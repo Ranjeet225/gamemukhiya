@@ -42,8 +42,25 @@
                                     </div>
                                 </div>
                             @endif
-
                             <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form--label">@lang('Username')</label>
+                                    <input name="username" class="form--control checkUser" type="text" value="{{ old('username') }}" required>
+                                    <small class="text--danger usernameExist"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form--label">@lang('Mobile')</label>
+                                    <div class="input-inner">
+                                        <span class="input-inner__icon mobile-code"></span>
+                                        <input name="mobile" class="form--control checkUser" type="number" value="{{ old('old') }}" required>
+                                    </div>
+                                    <small class="text--danger mobileExist"></small>
+                                </div>
+                            </div>
+
+                            {{-- <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form--label">@lang('First Name')</label>
                                     <div class="input-inner">
@@ -53,9 +70,9 @@
                                         <input class="form--control" type="text" name="firstname" value="{{ old('firstname') }}" required>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
-                            <div class="col-md-6">
+                            {{-- <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form--label">@lang('Last Name')</label>
                                     <div class="input-inner">
@@ -65,7 +82,7 @@
                                         <input class="form--control" type="text" name="lastname" value="{{ old('lastname') }}" required>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <div class="form-group">
                                 <label class="form--label">@lang('Email Address')</label>

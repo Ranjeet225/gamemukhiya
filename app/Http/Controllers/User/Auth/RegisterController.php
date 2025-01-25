@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rule;
+use App\Models\Transaction;
 
 class RegisterController extends Controller {
 
@@ -30,7 +32,6 @@ class RegisterController extends Controller {
     }
 
     protected function validator(array $data) {
-
         $passwordValidation = Password::min(6);
 
         if (gs('secure_password')) {
@@ -42,19 +43,14 @@ class RegisterController extends Controller {
             $agree = 'required';
         }
 
-        $validate = Validator::make($data, [
-            'firstname' => 'required',
-            'lastname'  => 'required',
-            'email'     => 'required|string|email|unique:users',
-            'password'  => ['required', 'confirmed', $passwordValidation],
-            'captcha'   => 'sometimes|required',
-            'agree'     => $agree,
-        ], [
-            'firstname.required' => 'The first name field is required',
-            'lastname.required'  => 'The last name field is required',
+        return Validator::make($data, [
+            'username' => 'required|unique:users|min:6',
+            'mobile'   => ['required', 'regex:/^([0-9]*)$/'],
+            'email'    => 'required|string|email|unique:users',
+            'password' => ['required', 'confirmed', $passwordValidation],
+            'captcha'  => 'sometimes|required',
+            'agree'    => $agree,
         ]);
-
-        return $validate;
     }
 
     public function register(Request $request) {
@@ -70,13 +66,31 @@ class RegisterController extends Controller {
             $notify[] = ['error', 'Invalid captcha provided'];
             return back()->withNotify($notify);
         }
-
-        event(new Registered($user = $this->create($request->all())));
-
+        event(new Registered($user = $this->create(array_merge($request->all(), ['profile_complete' => Status::YES]))));
         $this->guard()->login($user);
 
-        return $this->registered($request, $user)
-        ?: redirect($this->redirectPath());
+        if (gs('rb')) {
+            $user->balance += gs('register_bonus');
+            $user->save();
+            $transaction               = new Transaction();
+            $transaction->user_id      = $user->id;
+            $transaction->amount       = gs('register_bonus');
+            $transaction->charge       = 0;
+            $transaction->trx_type     = '+';
+            $transaction->details      = 'You have got register bonus';
+            $transaction->remark       = 'register_bonus';
+            $transaction->trx          = getTrx();
+            $transaction->post_balance = $user->balance;
+            $transaction->save();
+
+            notify($user, 'REGISTER_BONUS', [
+                'username'     => $user->username,
+                'amount'       => showAmount(gs('register_bonus')),
+                'trx'          => $transaction->trx,
+                'post_balance' => showAmount($user->balance),
+            ]);
+        }
+        return to_route('user.home');
     }
 
     protected function create(array $data) {
@@ -90,8 +104,10 @@ class RegisterController extends Controller {
         //User Create
         $user            = new User();
         $user->email     = strtolower($data['email']);
-        $user->firstname = $data['firstname'];
-        $user->lastname  = $data['lastname'];
+        // $user->firstname = $data['firstname'];
+        // $user->lastname  = $data['lastname'];
+        $user->mobile    = $data['mobile'];
+        $user->username  = strtolower($data['username']);
         $user->password  = Hash::make($data['password']);
         $user->ref_by    = $referUser ? $referUser->id : 0;
         $user->kv        = gs('kv') ? Status::NO : Status::YES;
